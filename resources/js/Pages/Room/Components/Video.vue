@@ -1,10 +1,14 @@
 <template>
-    <video :src="src" autoplay></video>
+    <video :srcObject="srcObject" :autoplay="autoplay"></video>
 </template>
 
 <script>
 export default {
-    props: ['src']
+    props: ['srcObject', 'autoplay'],
+    data: function() {
+        return {};
+    },
+    mounted() {}
 };
 </script>
 

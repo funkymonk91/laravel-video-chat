@@ -6,14 +6,15 @@
 
         <div class="py-12">
             <h1 class="text-center">Laravel Video Chat</h1>
-            <div class="video-container" ref="video-container"></div>
+            <div class="video-container" ref="video-container">
+                <video v-for="(video, index) in videoList" :key="index" />
+            </div>
         </div>
     </app-layout>
 </template>
 
 <script>
 import AppLayout from '../../Layouts/AppLayout';
-import Video from './Components/Video';
 import Pusher from 'pusher-js';
 import Peer from 'peerjs';
 
@@ -27,22 +28,24 @@ export default {
     },
     data() {
         return {
-            videos: []
+            peers: {}
         };
     },
     mounted() {
+        // this.$nextTick(function() {
         this.setupVideoChat();
+        // });
     },
     methods: {
         setupVideoChat() {
-            // To show pusher errors
-            // Pusher.logToConsole = true;
-            const stream = navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
+            // const pusher = this.getPusherInstance();
+
+            const myPeer = new Peer(undefined, {
+                host: '/',
+                port: '3001'
             });
 
-            const myVideo = new video();
+            const myVideo = document.createElement('video');
             myVideo.muted = true;
 
             navigator.mediaDevices
@@ -54,12 +57,19 @@ export default {
                     this.addVideoStream(myVideo, stream);
                 });
 
-            // const pusher = this.getPusherInstance();
-            // this.channel = pusher.subscribe('presence-video-chat');
+            // this.channel = pusher.subscribe('video-chat');
             // this.channel.bind(`client-signal-${this.user.id}`, signal => {
             //     const peer = this.getPeer(signal.userId, false);
             //     peer.signal(signal.data);
             // });
+        },
+        addVideoStream(video, stream) {
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+            });
+
+            this.$refs['video-container'].append(video);
         },
         getPusherInstance() {
             return new Pusher(process.env.MIX_PUSHER_APP_KEY, {
@@ -73,42 +83,20 @@ export default {
                     }
                 }
             });
-        },
-        addVideoStream(video, stream) {
-            video.srcObject = stream;
-            video.addEventListener('loadedmetadata', () => {
-                this.$refs['video-container'].$createElement('video');
-                video.play();
-            });
         }
     }
 };
 </script>
 
-<style>
-/* .video-container {
-    width: 500px;
-    height: 380px;
-    margin: 8px auto;
-    border: 3px solid #000;
-    position: relative;
-    box-shadow: 1px 1px 1px #9e9e9e;
+<style scoped>
+.video-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 300px);
+    grid-auto-rows: 300px;
 }
-.video-here {
-    width: 130px;
-    position: absolute;
-    left: 10px;
-    bottom: 16px;
-    border: 1px solid #000;
-    border-radius: 2px;
-    z-index: 2;
-}
-.video-there {
+video {
     width: 100%;
     height: 100%;
-    z-index: 1;
+    object-fit: cover;
 }
-.text-right {
-    text-align: right;
-} */
 </style>
