@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\RoomChatController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\VideoChatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +29,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('room/{room}', [RoomController::class, 'show'])
         ->name('room.show');
 
-    Route::post('room/auth', [RoomController::class, 'auth'])
-        ->name('room.auth');
+    Route::post('room/{room}/chat', [RoomChatController::class, 'store'])
+        ->name('room.chat.store');
 });
