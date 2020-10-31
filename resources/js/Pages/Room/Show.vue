@@ -7,7 +7,7 @@
         <div class="py-12">
             <h1 class="text-center">Laravel Video Chat</h1>
             <div class="video-container" ref="video-container">
-                <video v-for="(video, index) in videoList" :key="index" />
+                <!-- <video v-for="(video, index) in videoList" :key="index" /> -->
             </div>
         </div>
     </app-layout>
@@ -15,36 +15,44 @@
 
 <script>
 import AppLayout from '../../Layouts/AppLayout';
-import Pusher from 'pusher-js';
-import Peer from 'peerjs';
+// import Peer from 'peerjs';
 
 export default {
     components: {
         AppLayout
     },
     props: {
-        user: Object,
-        others: Array
+        room: Object,
+        user: Object
     },
     data() {
         return {
             peers: {}
+            // myPeer: new Peer(undefined, {
+            //     host: '/',
+            //     port: '3001'
+            // });
         };
     },
     mounted() {
-        // this.$nextTick(function() {
-        this.setupVideoChat();
-        // });
+        // this.setupVideoChat();
+
+        Echo.join(`room.${this.room.id}`)
+            .here(users => {
+                console.log(users);
+            })
+            .joining(user => {
+                console.log('joined', user);
+            })
+            .leaving(user => {
+                console.log('left', user);
+            })
+            .listen('NewMessage', e => {
+                console.log(e);
+            });
     },
     methods: {
         setupVideoChat() {
-            // const pusher = this.getPusherInstance();
-
-            const myPeer = new Peer(undefined, {
-                host: '/',
-                port: '3001'
-            });
-
             const myVideo = document.createElement('video');
             myVideo.muted = true;
 
@@ -56,12 +64,6 @@ export default {
                 .then(stream => {
                     this.addVideoStream(myVideo, stream);
                 });
-
-            // this.channel = pusher.subscribe('video-chat');
-            // this.channel.bind(`client-signal-${this.user.id}`, signal => {
-            //     const peer = this.getPeer(signal.userId, false);
-            //     peer.signal(signal.data);
-            // });
         },
         addVideoStream(video, stream) {
             video.srcObject = stream;
@@ -70,19 +72,6 @@ export default {
             });
 
             this.$refs['video-container'].append(video);
-        },
-        getPusherInstance() {
-            return new Pusher(process.env.MIX_PUSHER_APP_KEY, {
-                authEndpoint: route('VideoChat.auth'),
-                cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-                auth: {
-                    headers: {
-                        'X-CSRF-Token': document.head.querySelector(
-                            'meta[name="csrf-token"]'
-                        ).content
-                    }
-                }
-            });
         }
     }
 };
