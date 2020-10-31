@@ -20,7 +20,6 @@ class RoomController extends Controller
     public function show(Room $room, Request $request)
     {
         $user = $request->user();
-        $others = User::where('id', '!=', $user->id)->pluck('name', 'id');
 
         return Inertia::render('Room/Show', [
             'user' => collect($request->user()->only(['id', 'name'])),
