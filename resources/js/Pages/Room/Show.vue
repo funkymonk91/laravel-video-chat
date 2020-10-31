@@ -9,6 +9,7 @@
             <div class="video-container" ref="video-container">
                 <!-- <video v-for="(video, index) in videoList" :key="index" /> -->
             </div>
+            <text-chat :user="user" :room="room"></text-chat>
         </div>
     </app-layout>
 </template>
@@ -17,9 +18,11 @@
 import AppLayout from '../../Layouts/AppLayout';
 // import Peer from 'peerjs';
 
+import TextChat from './Components/TextChat';
 export default {
     components: {
-        AppLayout
+        AppLayout,
+        TextChat
     },
     props: {
         room: Object,
@@ -46,9 +49,6 @@ export default {
             })
             .leaving(user => {
                 console.log('left', user);
-            })
-            .listen('NewMessage', e => {
-                console.log(e);
             });
     },
     methods: {
