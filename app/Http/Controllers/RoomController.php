@@ -19,8 +19,6 @@ class RoomController extends Controller
 
     public function show(Room $room, Request $request)
     {
-        $user = $request->user();
-
         return Inertia::render('Room/Show', [
             'user' => collect($request->user()->only(['id', 'name'])),
             'room' => $room
