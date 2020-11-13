@@ -6,9 +6,7 @@
 
         <div class="py-12">
             <h1 class="text-center">Laravel Video Chat</h1>
-            <div class="video-container" ref="video-container">
-                <!-- <video v-for="(video, index) in videoList" :key="index" /> -->
-            </div>
+            <div class="video-container" ref="video-container"></div>
             <text-chat :user="user" :room="room"></text-chat>
         </div>
     </app-layout>
@@ -16,7 +14,6 @@
 
 <script>
 import AppLayout from '../../Layouts/AppLayout';
-// import Peer from 'peerjs';
 
 import TextChat from './Components/TextChat';
 export default {
@@ -30,29 +27,28 @@ export default {
     },
     data() {
         return {
-            peers: {}
-            // myPeer: new Peer(undefined, {
-            //     host: '/',
-            //     port: '3001'
-            // });
+            peers: [],
+            myPeerId: `${this.room.id}-${this.user.id}`,
+            presenceChannel: Echo.join(`room.${this.room.id}`)
         };
     },
     mounted() {
-        // this.setupVideoChat();
+        this.setupVideoChat();
 
-        Echo.join(`room.${this.room.id}`)
+        this.presenceChannel
             .here(users => {
-                console.log(users);
-            })
-            .joining(user => {
-                console.log('joined', user);
+                console.log('room users ', users);
             })
             .leaving(user => {
-                console.log('left', user);
+                console.log('user leaving ', user);
+                if (this.peers[this.myPeerId]) {
+                    this.peers[this.myPeerId].close();
+                }
             });
     },
     methods: {
         setupVideoChat() {
+            const self = this;
             const myVideo = document.createElement('video');
             myVideo.muted = true;
 
@@ -61,17 +57,46 @@ export default {
                     video: true,
                     audio: true
                 })
-                .then(stream => {
-                    this.addVideoStream(myVideo, stream);
+                .then(function(stream) {
+                    self.addVideoStream(myVideo, stream);
+
+                    self.myPeer.on('call', function(call) {
+                        call.answer(stream);
+                        const video = document.createElement('video');
+
+                        call.on('stream', function(userVideoStream) {
+                            self.addVideoStream(video, userVideoStream);
+                        });
+                    });
+
+                    self.presenceChannel.joining(function(user) {
+                        console.log('user joining ', user);
+                        self.connectToNewUser(user, stream, peer);
+                    });
                 });
         },
         addVideoStream(video, stream) {
             video.srcObject = stream;
-            video.addEventListener('loadedmetadata', () => {
+            video.addEventListener('loadedmetadata', function() {
                 video.play();
             });
 
             this.$refs['video-container'].append(video);
+        },
+        connectToNewUser(user, stream) {
+            const userPeerId = `${this.room.id}-${user.id}`;
+            const call = this.myPeer.call(userPeerId, stream);
+            const video = document.createElement('video');
+
+            call.on('stream', function(userVideoStream) {
+                this.addVideoStream(video, userVideoStream);
+            });
+
+            call.on('close', function() {
+                video.remove();
+            });
+
+            this.peers[userPeerId] = call;
         }
     }
 };
