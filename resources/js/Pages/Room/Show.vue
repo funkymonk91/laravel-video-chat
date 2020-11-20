@@ -14,8 +14,9 @@
 
 <script>
 import AppLayout from '../../Layouts/AppLayout';
-
 import TextChat from './Components/TextChat';
+import Peer from 'peerjs';
+
 export default {
     components: {
         AppLayout,
@@ -27,9 +28,10 @@ export default {
     },
     data() {
         return {
-            peers: [],
+            peers: {},
             myPeerId: `${this.room.id}-${this.user.id}`,
-            presenceChannel: Echo.join(`room.${this.room.id}`)
+            presenceChannel: Echo.join(`room.${this.room.id}`),
+            myPeer: new Peer()
         };
     },
     mounted() {
@@ -60,18 +62,20 @@ export default {
                 .then(function(stream) {
                     self.addVideoStream(myVideo, stream);
 
+                    self.presenceChannel.joining(function(user) {
+                        console.log('user joining ', user);
+                        self.connectToNewUser(user, stream);
+                    });
+
                     self.myPeer.on('call', function(call) {
+                        console.log('hi');
                         call.answer(stream);
                         const video = document.createElement('video');
 
                         call.on('stream', function(userVideoStream) {
+                            console.log('hi', userVideoStream);
                             self.addVideoStream(video, userVideoStream);
                         });
-                    });
-
-                    self.presenceChannel.joining(function(user) {
-                        console.log('user joining ', user);
-                        self.connectToNewUser(user, stream, peer);
                     });
                 });
         },
